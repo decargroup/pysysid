@@ -1,0 +1,7 @@
+# Requirements to install ``pysid``, run all unit tests, and generate docs
+-r requirements.txt
+
+pytest
+pytest-regressions
+sphinx
+sphinx-rtd-theme
