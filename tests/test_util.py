@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-import pysid
+import pysysid
 
 
 @pytest.mark.parametrize(
@@ -70,7 +70,7 @@ import pysid
     ],
 )
 class TestHankel:
-    """Test :func:`pysid.hankel`."""
+    """Test :func:`pysysid.hankel`."""
 
     X = np.array([
         [1, 2, 3, 4, 5],
@@ -78,14 +78,14 @@ class TestHankel:
     ])
 
     def test_hankel(self, first_row, n_brow, n_col, H_exp):
-        """Test :func:`pysid.hankel` against known answers."""
+        """Test :func:`pysysid.hankel` against known answers."""
         if isinstance(H_exp, np.ndarray):
-            H = pysid.hankel(self.X, first_row, n_brow, n_col)
+            H = pysysid.hankel(self.X, first_row, n_brow, n_col)
             np.testing.assert_allclose(H, H_exp)
         else:
             # If ``H_exp='raise'``, make sure it raises a :class:`ValueError`.
             with pytest.raises(ValueError):
-                pysid.hankel(self.X, first_row, n_brow, n_col)
+                pysysid.hankel(self.X, first_row, n_brow, n_col)
 
 
 class TestEpisodeExtraction:
@@ -196,7 +196,7 @@ class TestEpisodeExtraction:
         episode_feature,
     ):
         """Test :func:`extract_initial_conditions`."""
-        ic = pysid.extract_initial_conditions(
+        ic = pysysid.extract_initial_conditions(
             X,
             min_samples,
             n_inputs,
@@ -244,7 +244,7 @@ class TestEpisodeExtraction:
     )
     def test_extract_input(self, X, u_exp, n_inputs, episode_feature):
         """Test :func:`extract_input`."""
-        u = pysid.extract_input(X, n_inputs, episode_feature)
+        u = pysysid.extract_input(X, n_inputs, episode_feature)
         np.testing.assert_allclose(u, u_exp)
 
     def test_strip_initial_conditons(self):
@@ -259,12 +259,12 @@ class TestEpisodeExtraction:
             [-1, 2, -1, 4, 5, -1, 7, 8],
             [-1, 3, -1, 5, 6, -1, 8, 9],
         ]).T
-        X1s = pysid.strip_initial_conditions(
+        X1s = pysysid.strip_initial_conditions(
             X1,
             min_samples=1,
             episode_feature=True,
         )
-        X2s = pysid.strip_initial_conditions(
+        X2s = pysysid.strip_initial_conditions(
             X2,
             min_samples=1,
             episode_feature=True,
@@ -378,7 +378,7 @@ class TestSplitCombineEpisodes:
         .. todo:: Break up multiple asserts.
         """
         # Split episodes
-        episodes_actual = pysid.split_episodes(
+        episodes_actual = pysysid.split_episodes(
             X,
             episode_feature=episode_feature,
         )
@@ -391,7 +391,7 @@ class TestSplitCombineEpisodes:
 
     def test_combine_episodes(self, X, episodes, episode_feature):
         """Test :func:`combine_episodes`."""
-        X_actual = pysid.combine_episodes(
+        X_actual = pysysid.combine_episodes(
             episodes,
             episode_feature=episode_feature,
         )

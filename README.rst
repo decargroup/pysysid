@@ -1,7 +1,7 @@
 .. role:: class(code)
 
-pysid
+pysysid
 =====
 
-``pysid`` is a system identification library in Python, compatible with
+``pysysid`` is a system identification library in Python, compatible with
 ``scikit-learn``.

@@ -1,4 +1,4 @@
-# Requirements to install ``pysid``, run all unit tests, and generate docs
+# Requirements to install ``pysysid``, run all unit tests, and generate docs
 -r requirements.txt
 
 pytest

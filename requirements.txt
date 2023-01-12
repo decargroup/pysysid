@@ -1,4 +1,4 @@
-# Requirements to install ``pysid`` and run examples
+# Requirements to install ``pysysid`` and run examples
 numpy>=1.21.0
 scipy>=1.7.0
 scikit-learn>=1.0.0
