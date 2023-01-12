@@ -7,7 +7,7 @@ with open('README.rst', 'r') as f:
 
 setuptools.setup(
     name='pysid',
-    version='0.0.1',
+    version='0.1.0',
     description=('System identification library in Python, compatible with '
                  '`scikit-learn`'),
     long_description=readme,
