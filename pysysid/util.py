@@ -6,25 +6,29 @@ import numpy as np
 import pandas
 
 
-def hankel(
+def block_hankel(
     X: np.ndarray,
     n_row: int,
     n_col: int,
     first_feature: int = 0,
+    episode_feature: bool = False,
 ) -> np.ndarray:
     """Form a block Hankel matrix.
 
     Parameters
     ----------
     X : np.ndarray, shape (n_samples, n_features)
-        Data matrix, where each row is a feature.
+        Data matrix, where each row is a feature. Must have at least
+        ``first_feature + n_row + n_col - 1`` samples in each episode.
     n_row : int
-        Number of rows in Hankel matrix.
+        Number of rows in Hankel matrix for each episode.
     n_col : int
-        Number of block columns in Hankel matrix. Full number of columns is
-        ``n_col * X.shape[1]``.
+        Number of block columns in Hankel matrix for each episode. Full number
+        of columns per episode is ``n_col * X.shape[1]``.
     first_feature : int
-        First row of data matrix to use.
+        First feature of each to use.
+    episode_feature : bool
+        True if first feature indicates which episode a timestep is from.
 
     Returns
     -------
@@ -34,16 +38,23 @@ def hankel(
     Raises
     ------
     ValueError
-        If the data matrix does not have enough timesteps.
+        If the any episode in the data matrix does not have enough timesteps.
     """
-    if X.shape[0] < (first_feature + n_row + n_col - 1):
-        raise ValueError(
-            '`X` must have at least `n_row + n_col + first_feature` timesteps.'
-        )
-    cols = []
-    for col in range(first_feature, n_col + first_feature):
-        cols.append(X[col:(col + n_row), :])
-    H = np.hstack(cols)
+    eps = split_episodes(X, episode_feature=episode_feature)
+    hankels = []
+    for ep, X_ep in eps:
+        min_samples = first_feature + n_row + n_col - 1
+        if X_ep.shape[0] < min_samples:
+            raise ValueError(
+                f'Episode {ep} has {X_ep.shape[0]} samples, must have at '
+                f'least {min_samples} samples.'
+            )
+        cols = []
+        for col in range(first_feature, n_col + first_feature):
+            cols.append(X_ep[col:(col + n_row), :])
+        H_ep = np.hstack(cols)
+        hankels.append(H_ep)
+    H = np.vstack(hankels)
     return H
 
 

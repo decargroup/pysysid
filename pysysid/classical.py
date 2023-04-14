@@ -21,9 +21,22 @@ class Arx(sklearn.base.BaseEstimator, sklearn.base.RegressorMixin):
         'dtype': 'numeric',
     }
 
-    def __init__(self):
-        """Instantiate :class:`Arx`."""
-        pass
+    def __init__(
+        self,
+        n_lags_output: int = None,
+        n_lags_input: int = None,
+    ) -> None:
+        """Instantiate :class:`Arx`.
+
+        Parameters
+        ----------
+        n_lags_output : int
+            TODO
+        n_lags_input : int
+            TODO
+        """
+        self.n_lags_output = n_lags_output
+        self.n_lags_input = n_lags_input
 
     def fit(
         self,

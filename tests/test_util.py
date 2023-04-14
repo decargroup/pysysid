@@ -7,21 +7,37 @@ import pysysid
 
 
 @pytest.mark.parametrize(
-    'first_row, n_brow, n_col, H_exp',
+    'X, n_row, n_col, first_feature, episode_feature, H_exp',
     [
         (
+            np.array([
+               [1, 2],
+               [2, 4],
+               [3, 6],
+               [4, 8],
+               [5, 10],
+            ]),
             2,
             3,
             0,
+            False,
             np.array([
                 [1, 2, 2, 4, 3, 6],
                 [2, 4, 3, 6, 4, 8],
             ]),
         ),
         (
+            np.array([
+               [1, 2],
+               [2, 4],
+               [3, 6],
+               [4, 8],
+               [5, 10],
+            ]),
             3,
             3,
             0,
+            False,
             np.array([
                 [1, 2, 2, 4, 3, 6],
                 [2, 4, 3, 6, 4, 8],
@@ -29,63 +45,156 @@ import pysysid
             ]),
         ),
         (
+            np.array([
+               [1, 2],
+               [2, 4],
+               [3, 6],
+               [4, 8],
+               [5, 10],
+            ]),
             2,
             2,
             1,
+            False,
             np.array([
                 [2, 4, 3, 6],
                 [3, 6, 4, 8],
             ]),
         ),
         (
+            np.array([
+               [1, 2],
+               [2, 4],
+               [3, 6],
+               [4, 8],
+               [5, 10],
+            ]),
             2,
             3,
             1,
+            False,
             np.array([
                 [2, 4, 3, 6, 4, 8],
                 [3, 6, 4, 8, 5, 10],
             ]),
         ),
         (
+            np.array([
+               [1, 2],
+               [2, 4],
+               [3, 6],
+               [4, 8],
+               [5, 10],
+            ]),
             3,
             4,
             0,
+            False,
             'raise',
         ),
         (
+            np.array([
+               [1, 2],
+               [2, 4],
+               [3, 6],
+               [4, 8],
+               [5, 10],
+            ]),
             4,
             3,
             0,
+            False,
             'raise',
         ),
         (
+            np.array([
+               [1, 2],
+               [2, 4],
+               [3, 6],
+               [4, 8],
+               [5, 10],
+            ]),
             3,
             3,
             1,
+            False,
+            'raise'
+        ),
+        (
+            np.array([
+               [0, 1, 2],
+               [0, 2, 4],
+               [0, 3, 6],
+               [0, 4, 8],
+               [0, 5, 10],
+               [1, -1, -2],
+               [1, -2, -4],
+               [1, -3, -6],
+               [1, -4, -8],
+               [1, -5, -10],
+            ]),
+            2,
+            3,
+            0,
+            True,
+            np.array([
+                [1, 2, 2, 4, 3, 6],
+                [2, 4, 3, 6, 4, 8],
+                [-1, -2, -2, -4, -3, -6],
+                [-2, -4, -3, -6, -4, -8],
+            ]),
+        ),
+        (
+            np.array([
+               [0, 1, 2],
+               [0, 2, 4],
+               [0, 3, 6],
+               [0, 4, 8],
+               [0, 5, 10],
+               [1, -1, -2],
+               [1, -2, -4],
+               [1, -3, -6],
+            ]),
+            2,
+            3,
+            0,
+            True,
             'raise'
         ),
     ],
 )
 class TestHankel:
-    """Test :func:`pysysid.hankel`."""
+    """Test :func:`pysysid.block_hankel`."""
 
-    X = np.array([
-       [1, 2],
-       [2, 4],
-       [3, 6],
-       [4, 8],
-       [5, 10],
-    ])
-
-    def test_hankel(self, first_row, n_brow, n_col, H_exp):
-        """Test :func:`pysysid.hankel` against known answers."""
+    def test_block_hankel(
+        self,
+        X,
+        n_row,
+        n_col,
+        first_feature,
+        episode_feature,
+        H_exp,
+    ):
+        """Test :func:`pysysid.block_hankel` against known answers."""
         if isinstance(H_exp, np.ndarray):
-            H = pysysid.hankel(self.X, first_row, n_brow, n_col)
+            H = pysysid.block_hankel(
+                X,
+                n_row,
+                n_col,
+                first_feature=first_feature,
+                episode_feature=episode_feature,
+            )
             np.testing.assert_allclose(H, H_exp)
         else:
             # If ``H_exp='raise'``, make sure it raises a :class:`ValueError`.
             with pytest.raises(ValueError):
-                pysysid.hankel(self.X, first_row, n_brow, n_col)
+                pysysid.block_hankel(
+                    X,
+                    n_row,
+                    n_col,
+                    first_feature=first_feature,
+                    episode_feature=episode_feature,
+                )
 
 
 class TestEpisodeExtraction:
