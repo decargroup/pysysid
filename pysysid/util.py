@@ -39,6 +39,70 @@ def block_hankel(
     ------
     ValueError
         If the any episode in the data matrix does not have enough timesteps.
+
+    Examples
+    -------
+    The following examples are written out with strings instead of floats to
+    make them easier to understand.
+
+    Hankel matrix with no offset:
+
+    >>> X = np.array([
+    ...     ['x0'],
+    ...     ['x1'],
+    ...     ['x2'],
+    ...     ['x3'],
+    ...     ['x4'],
+    ...     ['x5'],
+    ...     ['x6'],
+    ... ], dtype=object)
+    >>> block_hankel(X, n_row=3, n_col=4)
+    array([['x0', 'x1', 'x2', 'x3'],
+           ['x1', 'x2', 'x3', 'x4'],
+           ['x2', 'x3', 'x4', 'x5']], dtype=object)
+
+    Hankel matrix with an offset:
+
+    >>> X = np.array([
+    ...     ['x0'],
+    ...     ['x1'],
+    ...     ['x2'],
+    ...     ['x3'],
+    ...     ['x4'],
+    ...     ['x5'],
+    ...     ['x6'],
+    ... ], dtype=object)
+    >>> block_hankel(X, n_row=3, n_col=4, first_feature=1)
+    array([['x1', 'x2', 'x3', 'x4'],
+           ['x2', 'x3', 'x4', 'x5'],
+           ['x3', 'x4', 'x5', 'x6']], dtype=object)
+
+    Multi-episode Hankel matrix:
+
+    >>> X = np.array([
+    ...     [0, 'x0'],
+    ...     [0, 'x1'],
+    ...     [0, 'x2'],
+    ...     [0, 'x3'],
+    ...     [0, 'x4'],
+    ...     [0, 'x5'],
+    ...     [0, 'x6'],
+    ...     [1, 'y0'],
+    ...     [1, 'y1'],
+    ...     [1, 'y2'],
+    ...     [1, 'y3'],
+    ...     [1, 'y4'],
+    ...     [1, 'y5'],
+    ...     [1, 'y6'],
+    ... ], dtype=object)
+    >>> block_hankel(X, n_row=3, n_col=4, first_feature=1,
+    ...              episode_feature=True)
+    array([['x1', 'x2', 'x3', 'x4'],
+           ['x2', 'x3', 'x4', 'x5'],
+           ['x3', 'x4', 'x5', 'x6'],
+           ['y1', 'y2', 'y3', 'y4'],
+           ['y2', 'y3', 'y4', 'y5'],
+           ['y3', 'y4', 'y5', 'y6']], dtype=object)
     """
     eps = split_episodes(X, episode_feature=episode_feature)
     hankels = []
