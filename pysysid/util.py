@@ -6,20 +6,25 @@ import numpy as np
 import pandas
 
 
-def hankel(X: np.ndarray, first_row: int, n_brow: int,
-           n_col: int) -> np.ndarray:
-    """Form a block Hankel matrix from data.
+def hankel(
+    X: np.ndarray,
+    n_row: int,
+    n_col: int,
+    first_feature: int = 0,
+) -> np.ndarray:
+    """Form a block Hankel matrix.
 
     Parameters
     ----------
-    X : np.ndarray
-        Data matrix.
-    first_row : np.ndarray
-        First row index to use.
-    n_brow : int
-        Number of (block) rows. Full number of rows is `n_brow * X.shape[0]`.
+    X : np.ndarray, shape (n_samples, n_features)
+        Data matrix, where each row is a feature.
+    n_row : int
+        Number of rows in Hankel matrix.
     n_col : int
-        Number of columns in Hankel matrix.
+        Number of block columns in Hankel matrix. Full number of columns is
+        ``n_col * X.shape[1]``.
+    first_feature : int
+        First row of data matrix to use.
 
     Returns
     -------
@@ -31,13 +36,14 @@ def hankel(X: np.ndarray, first_row: int, n_brow: int,
     ValueError
         If the data matrix does not have enough timesteps.
     """
-    if X.shape[1] < (first_row + n_brow + n_col - 1):
+    if X.shape[0] < (first_feature + n_row + n_col - 1):
         raise ValueError(
-            '`X` must have at least `first_row + n_brow + n_col` timesteps.')
-    rows = []
-    for row in range(first_row, first_row + n_brow):
-        rows.append(X[:, row:(row + n_col)])
-    H = np.vstack(rows)
+            '`X` must have at least `n_row + n_col + first_feature` timesteps.'
+        )
+    cols = []
+    for col in range(first_feature, n_col + first_feature):
+        cols.append(X[col:(col + n_row), :])
+    H = np.hstack(cols)
     return H
 
 
