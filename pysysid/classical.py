@@ -1,9 +1,13 @@
 """Classical system identification methods."""
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import numpy as np
+import scipy.linalg
 import sklearn.base
+import sklearn.utils.validation
+
+from . import util
 
 
 class Arx(sklearn.base.BaseEstimator, sklearn.base.RegressorMixin):
@@ -23,25 +27,25 @@ class Arx(sklearn.base.BaseEstimator, sklearn.base.RegressorMixin):
 
     def __init__(
         self,
-        n_lags_output: int = None,
-        n_lags_input: int = None,
+        n_lags_input: int = 0,
+        n_lags_output: int = 1,
     ) -> None:
         """Instantiate :class:`Arx`.
 
         Parameters
         ----------
-        n_lags_output : int
-            TODO
         n_lags_input : int
             TODO
+        n_lags_output : int
+            TODO
         """
-        self.n_lags_output = n_lags_output
         self.n_lags_input = n_lags_input
+        self.n_lags_output = n_lags_output
 
     def fit(
         self,
         X: np.ndarray,
-        y: np.ndarray = None,
+        y: Optional[np.ndarray] = None,
         n_inputs: int = 0,
         episode_feature: bool = False,
     ) -> 'Arx':
@@ -68,7 +72,73 @@ class Arx(sklearn.base.BaseEstimator, sklearn.base.RegressorMixin):
         ValueError
             If constructor or fit parameters are incorrect.
         """
-        pass
+        # Check data
+        X = sklearn.utils.validation.check_array(X)
+        # Check inputs
+        if n_inputs < 0:
+            raise ValueError('`n_inputs` must be greater than or equal to 0.')
+        # Check parameters
+        if self.n_lags_input < 0:
+            raise ValueError('`n_lags_input` must be positive.')
+        if self.n_lags_output < 0:
+            raise ValueError('`n_lags_output` must be positive.')
+        # Save fit information
+        self.n_features_in_ = X.shape[1]
+        n_episode_features = 1 if episode_feature else 0
+        self.n_outputs_in_ = X.shape[1] - n_inputs - n_episode_features
+        self.n_inputs_in_ = n_inputs
+        self.episode_feature_ = episode_feature
+        # Split data
+        Y = util.extract_output(
+            X,
+            n_inputs=self.n_inputs_in_,
+            episode_feature=self.episode_feature_,
+        )
+        U = util.extract_input(
+            X,
+            n_inputs=self.n_inputs_in_,
+            episode_feature=self.episode_feature_,
+        )
+        # Formulate least squares problem
+        H_Y_future = util.block_hankel(
+            Y,
+            n_row=None,
+            n_col=1,
+            first_feature=self.n_lags_output,
+            episode_feature=self.episode_feature_,
+        )
+        H_Y_past = util.block_hankel(
+            Y,
+            n_row=None,
+            n_col=self.n_lags_output,
+            first_feature=0,
+            episode_feature=self.episode_feature_,
+        )[:H_Y_future.shape[0], :]  # TODO patch
+        # TODO Handle n_lags_input=0 later
+        H_U_past = util.block_hankel(
+            U,
+            n_row=None,
+            n_col=self.n_lags_input,
+            first_feature=(self.n_lags_output - self.n_lags_input + 1),
+            episode_feature=self.episode_feature_,
+        )
+        H_past = np.hstack((-H_Y_past, H_U_past))
+        coefs = scipy.linalg.lstsq(H_past, H_Y_future)[0].T
+        #
+        coef_Y = np.split(
+            coefs[:, :(self.n_outputs_in_ * self.n_lags_output)],
+            self.n_lags_output,
+            axis=-1,
+        )
+        coef_U = np.split(
+            coefs[:, (self.n_outputs_in_ * self.n_lags_output):],
+            self.n_lags_input,
+            axis=-1,
+        )
+        # TODO
+        print(coef_Y)
+        print(coef_U)
+        return self
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """Perform a single-step prediction for each state in each episode.

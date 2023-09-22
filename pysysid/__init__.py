@@ -1,11 +1,12 @@
 """System identification library in Python."""
 
+from .classical import Arx
 from .util import (
+    block_hankel,
     combine_episodes,
     extract_initial_conditions,
-    extract_output,
     extract_input,
-    block_hankel,
+    extract_output,
     split_episodes,
     strip_initial_conditions,
 )
