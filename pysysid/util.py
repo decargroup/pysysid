@@ -1,6 +1,6 @@
 """Utilities shared between regressors."""
 
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import numpy as np
 import pandas
@@ -8,7 +8,7 @@ import pandas
 
 def block_hankel(
     X: np.ndarray,
-    n_row: int,
+    n_row: Optional[int],
     n_col: int,
     first_feature: int = 0,
     episode_feature: bool = False,
@@ -21,7 +21,8 @@ def block_hankel(
         Data matrix, where each row is a feature. Must have at least
         ``first_feature + n_row + n_col - 1`` samples in each episode.
     n_row : int
-        Number of rows in Hankel matrix for each episode.
+        Number of rows in Hankel matrix for each episode. If ``None``, is set
+        to ``n_row = n_samples - first_feature - n_col + 1``.
     n_col : int
         Number of block columns in Hankel matrix for each episode. Full number
         of columns per episode is ``n_col * X.shape[1]``.
@@ -107,15 +108,22 @@ def block_hankel(
     eps = split_episodes(X, episode_feature=episode_feature)
     hankels = []
     for ep, X_ep in eps:
-        min_samples = first_feature + n_row + n_col - 1
+        # If number of rows is unspecified, set it to use all the data
+        if n_row is None:
+            n_row_ep = X_ep.shape[0] - first_feature - n_col + 1
+        else:
+            n_row_ep = n_row
+        # Check that there are enough samples
+        min_samples = first_feature + n_row_ep + n_col - 1
         if X_ep.shape[0] < min_samples:
             raise ValueError(
                 f'Episode {ep} has {X_ep.shape[0]} samples, must have at '
                 f'least {min_samples} samples.'
             )
+        # Build matrix
         cols = []
         for col in range(first_feature, n_col + first_feature):
-            cols.append(X_ep[col:(col + n_row), :])
+            cols.append(X_ep[col:(col + n_row_ep), :])
         H_ep = np.hstack(cols)
         hankels.append(H_ep)
     H = np.vstack(hankels)
