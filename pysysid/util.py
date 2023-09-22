@@ -160,6 +160,45 @@ def extract_initial_conditions(
     return X0
 
 
+def extract_output(
+    X: np.ndarray,
+    n_inputs: int = 0,
+    episode_feature: bool = False,
+) -> np.ndarray:
+    """Extract output from a data matrix.
+
+    Parameters
+    ----------
+    X : np.ndarray
+        Data matrix.
+    n_inputs : int
+        Number of input features at the end of ``X``.
+    episode_feature : bool
+        True if first feature indicates which episode a timestep is from.
+
+    Returns
+    -------
+    np.ndarray
+        Output extracted from data matrix.
+    """
+    if episode_feature:
+        n_states = X.shape[1] - n_inputs - 1
+        if n_states == 0:
+            Y = X[:, [0]]
+        else:
+            Y = np.hstack((
+                X[:, [0]],
+                X[:, 1:(n_states + 1)],
+            ))
+    else:
+        n_states = X.shape[1] - n_inputs
+        if n_states == 0:
+            Y = np.zeros((X.shape[0], 0))
+        else:
+            Y = X[:, :n_states]
+    return Y
+
+
 def extract_input(
     X: np.ndarray,
     n_inputs: int = 0,
@@ -181,19 +220,20 @@ def extract_input(
     np.ndarray
         Input extracted from data matrix.
     """
-    episodes = split_episodes(X, episode_feature=episode_feature)
-    # Strip each episode
-    inputs = []
-    for (i, X_i) in episodes:
+    if episode_feature:
         if n_inputs == 0:
-            input_ = np.zeros((X_i.shape[0], 0))
+            U = X[:, [0]]
         else:
-            n_states = X_i.shape[1] - n_inputs
-            input_ = X_i[:, n_states:]
-        inputs.append((i, input_))
-    # Concatenate the inputs
-    u = combine_episodes(inputs, episode_feature=episode_feature)
-    return u
+            U = np.hstack((
+                X[:, [0]],
+                X[:, -n_inputs:],
+            ))
+    else:
+        if n_inputs == 0:
+            U = np.zeros((X.shape[0], 0))
+        else:
+            U = X[:, -n_inputs:]
+    return U
 
 
 def strip_initial_conditions(

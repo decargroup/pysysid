@@ -201,7 +201,8 @@ class TestEpisodeExtraction:
     """Test episode initial condition and input extraction.
 
     Specifically, tests :func:`extract_initial_conditions`,
-    :func:`extract_input`, and :func:`strip_initial_conditions`.
+    :func:`extract_output`, :func:`extract_input`, and
+    :func:`strip_initial_conditions`.
     """
 
     @pytest.mark.parametrize(
@@ -314,6 +315,61 @@ class TestEpisodeExtraction:
         np.testing.assert_allclose(ic, ic_exp)
 
     @pytest.mark.parametrize(
+        'X, y_exp, n_inputs, episode_feature',
+        [
+            (
+                np.array([
+                    [1, 2, 3, 4],
+                    [6, 7, 8, 9],
+                ]).T,
+                np.array([
+                    [1, 2, 3, 4],
+                ]).T,
+                1,
+                False,
+            ),
+            (
+                np.array([
+                    [1, 2, 3, 4],
+                    [6, 7, 8, 9],
+                ]).T,
+                np.array([]).reshape((0, 4)).T,
+                2,
+                False,
+            ),
+            (
+                np.array([
+                    [0, 0, 1, 1],
+                    [1, 2, 3, 4],
+                    [6, 7, 8, 9],
+                ]).T,
+                np.array([
+                    [0, 0, 1, 1],
+                    [1, 2, 3, 4],
+                ]).T,
+                1,
+                True,
+            ),
+            (
+                np.array([
+                    [0, 0, 1, 1],
+                    [1, 2, 3, 4],
+                    [6, 7, 8, 9],
+                ]).T,
+                np.array([
+                    [0, 0, 1, 1],
+                ]).T,
+                2,
+                True,
+            ),
+        ],
+    )
+    def test_extract_output(self, X, y_exp, n_inputs, episode_feature):
+        """Test :func:`extract_output`."""
+        y = pysysid.extract_output(X, n_inputs, episode_feature)
+        np.testing.assert_allclose(y, y_exp)
+
+    @pytest.mark.parametrize(
         'X, u_exp, n_inputs, episode_feature',
         [
             (
@@ -347,6 +403,18 @@ class TestEpisodeExtraction:
                     [6, 7, 8, 9],
                 ]).T,
                 1,
+                True,
+            ),
+            (
+                np.array([
+                    [0, 0, 1, 1],
+                    [1, 2, 3, 4],
+                    [6, 7, 8, 9],
+                ]).T,
+                np.array([
+                    [0, 0, 1, 1],
+                ]).T,
+                0,
                 True,
             ),
         ],
