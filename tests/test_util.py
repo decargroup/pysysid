@@ -606,32 +606,94 @@ class TestEpisodeExtraction:
             ],
             True,
         ),
+        # Negative episode
+        (
+            np.array([
+                [0, 0, 0, -1, -1, -1],
+                [1, 2, 3, 4, 5, 6],
+                [6, 5, 4, 3, 2, 1],
+            ]).T,
+            'raise',
+            True,
+        ),
+        # Fractional episode
+        (
+            np.array([
+                [0, 0, 0, 1.1, 1.1, 1.1],
+                [1, 2, 3, 4, 5, 6],
+                [6, 5, 4, 3, 2, 1],
+            ]).T,
+            'raise',
+            True,
+        ),
     ],
 )
 class TestSplitCombineEpisodes:
     """Test :func:`split_episodes` and :func:`combine_episodes`."""
 
     def test_split_episodes(self, X, episodes, episode_feature):
-        """Test :func:`split_episodes`.
-
-        .. todo:: Break up multiple asserts.
-        """
-        # Split episodes
-        episodes_actual = pysysid.split_episodes(
-            X,
-            episode_feature=episode_feature,
-        )
-        # Compare every episode
-        for actual, expected in zip(episodes_actual, episodes):
-            i_actual, X_actual = actual
-            i_expected, X_expected = expected
-            assert i_actual == i_expected
-            np.testing.assert_allclose(X_actual, X_expected)
+        """Test :func:`split_episodes`."""
+        if episodes == 'raise':
+            with pytest.raises(ValueError):
+                pysysid.split_episodes(X, episode_feature=episode_feature)
+        else:
+            episodes_actual = pysysid.split_episodes(
+                X, episode_feature=episode_feature)
+            episodes_expected = list(sorted(episodes))
+            zipped_episodes = zip(episodes_actual, episodes_expected)
+            if episode_feature:
+                X_ep = X[:, 0]
+                X = X[:, 1:]
+                for (i_act, X_i_act), (i_exp, X_i_exp) in zipped_episodes:
+                    assert i_act == i_exp
+                    np.testing.assert_allclose(X_i_act, X_i_exp)
+            else:
+                assert len(episodes) == 1
+                X_exp = episodes[0][1]
+                np.testing.assert_allclose(X, X_exp)
 
     def test_combine_episodes(self, X, episodes, episode_feature):
         """Test :func:`combine_episodes`."""
-        X_actual = pysysid.combine_episodes(
-            episodes,
-            episode_feature=episode_feature,
+        if episodes == 'raise':
+            with pytest.raises(ValueError):
+                pysysid.combine_episodes(
+                    episodes,
+                    episode_feature=episode_feature,
+                )
+        else:
+            X_actual = pysysid.combine_episodes(
+                episodes,
+                episode_feature=episode_feature,
+            )
+            np.testing.assert_allclose(X_actual, X)
+
+
+@pytest.mark.parametrize('fn', [
+    pysysid.example_data_msd,
+])
+class TestExampleData:
+    """Test example dynamic model data.
+
+    Attributes
+    ----------
+    tol : float
+        Tolerance for regression test.
+    """
+
+    tol = 1e-6
+
+    def test_example_data(self, ndarrays_regression, fn):
+        """Test example dynamic model data."""
+        data = fn()
+        ndarrays_regression.check(
+            {
+                'X_train': data['X_train'],
+                'X_valid': data['X_valid'],
+                'x0_valid': data['x0_valid'],
+                'u_valid': data['u_valid'],
+                'n_inputs': data['n_inputs'],
+                'episode_feature': data['episode_feature'],
+                't': data['t'],
+            },
+            default_tolerance=dict(atol=self.tol, rtol=0),
         )
-        np.testing.assert_allclose(X_actual, X)

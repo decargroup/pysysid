@@ -124,20 +124,16 @@ class Arx(sklearn.base.BaseEstimator, sklearn.base.RegressorMixin):
         )
         H_past = np.hstack((-H_Y_past, H_U_past))
         coefs = scipy.linalg.lstsq(H_past, H_Y_future)[0].T
-        #
-        coef_Y = np.split(
+        self.coef_Y_ = np.split(
             coefs[:, :(self.n_outputs_in_ * self.n_lags_output)],
             self.n_lags_output,
             axis=-1,
         )
-        coef_U = np.split(
+        self.coef_U_ = np.split(
             coefs[:, (self.n_outputs_in_ * self.n_lags_output):],
             self.n_lags_input,
             axis=-1,
         )
-        # TODO
-        print(coef_Y)
-        print(coef_U)
         return self
 
     def predict(self, X: np.ndarray) -> np.ndarray:
