@@ -25,7 +25,8 @@ def block_hankel(
         ``first_feature + n_row + n_col - 1`` samples in each episode.
     n_row : int
         Number of rows in Hankel matrix for each episode. If ``None``, is set
-        to ``n_row = n_samples - first_feature - n_col + 1``.
+        to ``n_row = n_samples - first_feature - n_col + 1``. If negative, is
+        set to the maximum minus ``n_row``.
     n_col : int
         Number of block columns in Hankel matrix for each episode. Full number
         of columns per episode is ``n_col * X.shape[1]``.
@@ -111,9 +112,12 @@ def block_hankel(
     eps = split_episodes(X, episode_feature=episode_feature)
     hankels = []
     for ep, X_ep in eps:
-        # If number of rows is unspecified, set it to use all the data
         if n_row is None:
+            # If number of rows is unspecified, set it to use all the data
             n_row_ep = X_ep.shape[0] - first_feature - n_col + 1
+        elif n_row < 0:
+            # If number of rows is negative, use max minus that many rows
+            n_row_ep = X_ep.shape[0] - first_feature - n_col + 1 - (-n_row)
         else:
             n_row_ep = n_row
         # Check that there are enough samples
@@ -505,10 +509,10 @@ def example_data_msd() -> Dict[str, Any]:
         damping=0.6,
     )
     # Set timestep
-    n_ep = 11
-    n_train = 10
+    n_ep = 10
+    n_train = 9
     t_range = (0, 10)
-    t_step = 0.1
+    t_step = 0.01
     t_sim = np.arange(*t_range, t_step)
     # Simulate episodes
     rng = np.random.default_rng(seed=2432)
@@ -518,9 +522,9 @@ def example_data_msd() -> Dict[str, Any]:
         u = random_input(
             t_range,
             t_step,
-            low=-0.1,
-            high=0.1,
-            cutoff=(0.1 / t_step),
+            low=-1,
+            high=1,
+            cutoff=(0.01 / t_step),
             rng=rng,
         )
         t, x = msd.simulate(
