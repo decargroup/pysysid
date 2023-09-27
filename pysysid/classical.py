@@ -33,12 +33,15 @@ class Arx(sklearn.base.BaseEstimator, sklearn.base.RegressorMixin):
     ) -> None:
         """Instantiate :class:`Arx`.
 
+        For a biproper system, ``n_lags_input = n_lags_output + 1``. For a
+        strictly proper system, ``n_lags_input = n_lags_output``.
+
         Parameters
         ----------
         n_lags_input : int
-            TODO
+            Number of input lags to use, including zero lag.
         n_lags_output : int
-            TODO
+            Number of output lags to use.
         """
         self.n_lags_input = n_lags_input
         self.n_lags_output = n_lags_output

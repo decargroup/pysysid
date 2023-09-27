@@ -11,8 +11,11 @@ def main():
     data = pysysid.example_data_msd()
 
     # Different ARX models
+    # Strictly proper
     arx = pysysid.Arx(n_lags_input=1, n_lags_output=1)
+    # Biproper
     # arx = pysysid.Arx(n_lags_input=3, n_lags_output=2)
+    # Strictly proper
     # arx = pysysid.Arx(n_lags_input=2, n_lags_output=3)
 
     # Fit model
