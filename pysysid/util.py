@@ -511,7 +511,7 @@ def example_data_msd() -> Dict[str, Any]:
     # Set timestep
     n_ep = 10
     n_train = 9
-    t_range = (0, 10)
+    t_range = (0, 1)
     t_step = 0.01
     t_sim = np.arange(*t_range, t_step)
     # Simulate episodes
@@ -522,9 +522,9 @@ def example_data_msd() -> Dict[str, Any]:
         u = random_input(
             t_range,
             t_step,
-            low=-1,
-            high=1,
-            cutoff=(0.01 / t_step),
+            low=-10,
+            high=10,
+            cutoff=(0.1 / t_step),
             rng=rng,
         )
         t, x = msd.simulate(

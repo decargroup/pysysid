@@ -204,6 +204,53 @@ class Arx(sklearn.base.BaseEstimator, sklearn.base.RegressorMixin):
         )
         return Y_pred
 
+    def predict_trajectory(self, X: np.ndarray) -> np.ndarray:
+        """Predict multi-step trajectory given input for each episode."""
+        # Check if fitted
+        sklearn.utils.validation.check_is_fitted(self)
+        # Validate array
+        X = sklearn.utils.validation.check_array(X, **self._check_array_params)
+        # Split episodes
+        episodes = util.split_episodes(
+            X,
+            episode_feature=self.episode_feature_,
+        )
+        # Predict for each episode
+        predictions = []
+        for (i, X_i) in episodes:
+            if X_i.shape[0] < self.min_samples_:
+                raise ValueError(f'Episode {i} has {X_i.shape[0]} samples but '
+                                 f'`min_samples_`={self.min_samples_} samples '
+                                 'are required.')
+            Y_i = util.extract_output(
+                X_i,
+                n_inputs=self.n_inputs_in_,
+                episode_feature=False,
+            )
+            U_i = util.extract_input(
+                X_i,
+                n_inputs=self.n_inputs_in_,
+                episode_feature=False,
+            )
+            n_ic = self.min_samples_ - 1
+            n_pred = Y_i.shape[0] - n_ic
+            Yp_i = np.zeros_like(Y_i)
+            Yp_i[:n_ic, :] = Y_i[:n_ic, :]
+            for k in range(n_ic, Yp_i.shape[0]):
+                for (j, coef_Y_j) in enumerate(self.coef_Y_):
+                    lag = self.n_lags_output - j
+                    Yp_i[[k], :] -= Yp_i[[k - lag], :] @ coef_Y_j.T
+                for (j, coef_U_j) in enumerate(self.coef_U_):
+                    lag = self.n_lags_input - j - 1
+                    Yp_i[[k], :] += U_i[[k - lag], :] @ coef_U_j.T
+            predictions.append((i, Yp_i))
+        # Combine and return
+        Y_pred = util.combine_episodes(
+            predictions,
+            episode_feature=self.episode_feature_,
+        )
+        return Y_pred
+
     # Extra estimator tags
     # https://scikit-learn.org/stable/developers/develop.html#estimator-tags
     def _more_tags(self):
